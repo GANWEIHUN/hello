@@ -1,0 +1,3 @@
+interface Tyre {
+    Tyre getTyre();
+}

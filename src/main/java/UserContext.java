@@ -1,0 +1,47 @@
+public class UserContext implements AutoCloseable {
+
+    private final static ThreadLocal<User> userThreadLocal = new ThreadLocal<>();
+
+    public UserContext(User user) {
+        userThreadLocal.set(user);
+    }
+
+    public static User getCurrentUser() {
+        return userThreadLocal.get();
+    }
+
+    @Override
+    public void close() {
+        userThreadLocal.remove();
+    }
+
+    public static class User {
+        private String name;
+        private int age;
+        private String gender;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public int getAge() {
+            return age;
+        }
+
+        public void setAge(int age) {
+            this.age = age;
+        }
+
+        public String getGender() {
+            return gender;
+        }
+
+        public void setGender(String gender) {
+            this.gender = gender;
+        }
+    }
+}

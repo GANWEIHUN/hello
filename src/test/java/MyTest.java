@@ -1,0 +1,468 @@
+import myAnnotation.CheckAnnotation;
+import org.junit.Test;
+import sun.misc.VM;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.*;
+import java.util.concurrent.ForkJoinPool;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+public class MyTest {
+
+    @Test
+    public void myTest() throws InterruptedException {
+
+        //hello world
+        testHello();
+        //大型小数
+        testBigFloat();
+        //获取安全随机数
+        testSecureRandom();
+        //位运算
+        testBitCalculate();
+        //泛型
+        testFanXing();
+        //对象的hashCode
+        testHashCode();
+        //栈
+        testStack();
+        //注解
+        testAnnotation();
+        //list列表转数组
+        testList();
+        //创建stream方式一，传入 supplier。对比list存储大量数据占用内存，stream几乎不占用内存，认为你传入的supplier是一个算法，需要用到了数据在去算
+        testSupplierStream();
+        //stream映射为新的stream
+        testMapStream();
+        //测试map的key，必须正确重写equals和hashCode
+        testMapKey();
+        //测试Integer缓存大小
+        testIntegerCache();
+        //测试单列
+        testSingleton();
+        //适配器
+        testAdapter();
+        //组合
+        testComposite();
+        //装饰器
+        testDecorator();
+        //工厂
+        testFactory();
+        //责任链
+        testChain();
+        //迭代器
+        testIterator();
+        //策略
+        testStrategy();
+        //建造者
+        testBuilder();
+        //多线程
+        testThreads();
+        //任务队列
+        testTaskQueue();
+        //fork/join线程池
+        testForkJoin();
+        //线程局部变量
+        testThreadLocal();
+    }
+
+    private void testThreadLocal() {
+        //这种在一个线程中，横跨若干方法调用，需要传递的对象，我们通常称之为上下文（Context），它是一种状态，可以是用户身份、任务信息等。
+        //给每个方法增加一个context参数非常麻烦，而且有些时候，如果调用链有无法修改源码的第三方库，User对象就传不进去了。
+        //Java标准库提供了一个特殊的ThreadLocal，它可以在一个线程中传递同一个对象。
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        UserContext.User user = new UserContext.User();
+        user.setName("tomato");
+        user.setGender("男");
+        user.setAge(19);
+        try (UserContext context = new UserContext(user)) {
+            printName();
+            printAage();
+        }
+    }
+
+    private void printAage() {
+        UserContext.User user = UserContext.getCurrentUser();
+        System.out.println("age:" + user.getAge());
+    }
+
+    private void printName() {
+        UserContext.User user = UserContext.getCurrentUser();
+        System.out.println("name:" + user.getName());
+    }
+
+    private void testForkJoin() {
+        //fork/join线程池，基于“分治”原理，把一个大任务分成多个小任务并发处理
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        Random random = new Random(0);
+        long[] array = new long[2000];
+        for (int i = 0; i < array.length; i++) {
+            array[i] = random.nextInt(10000);
+        }
+        SumTask sumTask = new SumTask(array, 0, array.length);
+        long result = ForkJoinPool.commonPool().invoke(sumTask);
+        System.out.println("result:" + result);
+    }
+
+    private void testTaskQueue() throws InterruptedException {
+        //任务队列，通过wait和notify多线程协同工作
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        //传统方式，synchronized配合wait和notify多线程协同工作
+        //TaskQueue taskQueue = new TaskQueue();
+        //新方式，reentrantLock配合condition多线程协同工作，新方式更灵活
+        TaskQueue2 taskQueue2 = new TaskQueue2();
+        List<Thread> threads = new ArrayList<>();
+        Thread thread = new Thread(() -> {
+            while (true) {
+                try {
+                    String task = taskQueue2.get();
+                    System.out.println("getTask:" + task);
+                } catch (InterruptedException exception) {
+                    //exception.printStackTrace();
+                    System.out.println("任务完成");
+                    break;
+                }
+            }
+        });
+        thread.start();
+        threads.add(thread);
+        Thread addThread = new Thread(() -> {
+            for (int i = 0; i < 8; i++) {
+                String task = "task" + i;
+                taskQueue2.add(task);
+                System.out.println("addTask:" + task);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException exception) {
+                    exception.printStackTrace();
+                }
+            }
+        });
+        addThread.start();
+        addThread.join();
+        System.out.println("任务添加完成");
+        Thread.sleep(1000);
+        for (Thread t : threads) {
+            t.interrupt();
+        }
+    }
+
+    private void testThreads() {
+        //多线程同时读写共享变量，需通过synchronized进行加锁
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        AddThread addThread = new AddThread();
+        DecreaseThread decreaseThread = new DecreaseThread();
+        addThread.start();
+        decreaseThread.start();
+        try {
+            addThread.join();
+            decreaseThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("count:" + Counter.num);
+    }
+
+    private void testBuilder() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        //建造者模式，创建一个完整对象由多个部件组成。参考stringBuilder链式代码stringBuilder.append().append().append()
+        MyCar myCar = new MyCar();
+        myCar.setTyre(new RubberTyre()).setDriveMode(new AutoMode()).setEngine(new InhaleEngine()).setEnginePosition(new FrontPosition()).run();
+    }
+
+    private void testStrategy() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        //策略思想，主流算法不变，其中容易变化的部分抽出来以参数的形式传进去，使得主体算法不用改变。
+        DiscountContext discountContext = new DiscountContext();
+        discountContext.setDiscountStrategy(new UserDiscountStrategy());
+        BigDecimal pay1 = discountContext.calculateDiscount(BigDecimal.valueOf(105));
+        System.out.println("pay1:" + pay1);
+
+        discountContext.setDiscountStrategy(new OverDiscountStrategy());
+        BigDecimal pay2 = discountContext.calculateDiscount(BigDecimal.valueOf(105));
+        System.out.println("pay2:" + pay2);
+
+        discountContext.setDiscountStrategy(new PrimeDiscountStrategy());
+        BigDecimal pay3 = discountContext.calculateDiscount(BigDecimal.valueOf(105));
+        System.out.println("pay3:" + pay3);
+    }
+
+    private void testIterator() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        //自定义迭代器
+        ReverseArray<Integer> array = new ReverseArray<>(1, 2, 3, 4, 5);
+        for (Integer integer : array) {
+            System.out.println(integer);
+        }
+    }
+
+    private void testChain() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        //责任链，一个请求在责任链流转。某个环节处理不符合要求，终止责任链流转或者继续流转。根据具体需求而定
+        Request request = new Request("小明", new BigDecimal(1090));
+        HandlerChain handlerChain = new HandlerChain(request);
+        DirectorHandler directorHandler = new DirectorHandler();
+        handlerChain.add(directorHandler);
+        handlerChain.add(new ManagerHandler());
+        handlerChain.process();
+
+        handlerChain.setRequest(new Request("张三", new BigDecimal(1080)));
+        handlerChain.process();
+
+    }
+
+    private void testFactory() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        //一个工厂应该提供工厂接口和产品接口
+        NumberFactory numberFactory = NumberFactory.getFactory();
+        Number number = numberFactory.parse("209");
+        System.out.println("number:" + number.toString());
+
+    }
+
+    private void testDecorator() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        //原理：持有核心类/接口，在核心类上面增加附加功能
+        TextLabel textLabel = new SpanLabel();
+        textLabel.setText("你好");
+        //文本加粗装饰
+        LabelDecorator nodeDecorator = new BoldDecorator(textLabel);
+        System.out.println(textLabel.getText());
+        System.out.println(nodeDecorator.getText());
+    }
+
+    private void testComposite() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        //原理：功能拆分一个个类，然后组合实现一个大的功能. 类似一棵树部分-整体的层次结构
+        ElementNode root = new ElementNode("school");
+        root.add(new ElementNode("1班").add(new TextNode("张三")).add(new TextNode("王五")));
+        root.add(new ElementNode("2班").add(new TextNode("jack")).add(new TextNode("tomato")).add(new CommentNode("注释")).add(new TextNode("窃格瓦拉")));
+        System.out.println(root.toXml());
+    }
+
+    private void testAdapter() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        //原理：接口B持有接口A，B里面实现A的接口。A和B都是抽象接口
+        Calculator calculator = new Calculator(100);
+        //Thread thread = new Thread(calculator);//编译报错
+        RunnableAdapter runnableAdapter = new RunnableAdapter(calculator);
+        Thread thread = new Thread(runnableAdapter);//Runnable适配器
+        thread.start();
+    }
+
+    private void testSingleton() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        System.out.println(Singleton.class);
+        Singleton singleton = Singleton.getInstance();
+        System.out.println(singleton);
+    }
+
+    private void testIntegerCache() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        //启动参数 -Djava.lang.Integer.IntegerCache.high=256
+        String high = VM.getSavedProperty("java.lang.Integer.IntegerCache.high");
+        System.out.printf("IntegerCache.high：%s%n", high);
+    }
+
+    private void testMapKey() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        Map<String, Integer> integerMap = new HashMap<>();
+        String key1 = "a";
+        integerMap.put(key1, 123);
+        String key2 = "a";
+        //key1和key2不是同一个对象，但是key2依然能取到key1的value。那是因为map里面是通过key的hashCode确定value索引的。
+        System.out.printf("key1=key2比较结果：%s%n", key1.equals(key2));
+        int value = integerMap.get(key2);
+        System.out.printf("value:%s%n", value);
+        System.out.printf("key1.equals(key2)比较结果：%s%n", key1.equals(key2));
+        System.out.printf("key1HashCode:%s key2HashCode:%s%n", key1.hashCode(), key2.hashCode());
+    }
+
+    private void testMapStream() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        Stream<Integer> integerStream = Stream.of(1, 2, 3);
+        Stream<Integer> integerStream1 = integerStream.map(n -> n * n);
+        integerStream1.forEach(System.out::println);
+    }
+
+    private <R> R abc(Integer integer) {
+        return null;
+    }
+
+    private void testSupplierStream() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        Stream<Integer> integerStream = Stream.generate(new NumberSupplier());
+        integerStream.limit(5).forEach(System.out::println);
+    }
+
+    private void testList() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        List<Integer> list = new ArrayList<>();
+        list.add(1);
+        list.add(123);
+        list.add(29);
+        list.add(8);
+        Integer[] array = list.toArray(new Integer[list.size()]);
+        System.out.printf("array:%s%n", array.length);
+        Integer[] array2 = new Integer[list.size()];
+        list.toArray(array2);
+        System.out.printf("array2:%s%n", array2.length);
+    }
+
+    private void testAnnotation() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        Student student = new Student();
+        student.Gender = "未知生物";
+        student.Name = "";
+        try {
+            boolean result = CheckAnnotation.check(student);
+            System.out.printf("检查结果%s%n", result);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void testStack() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        Deque<String> stack2 = new LinkedList<>();
+        stack2.push("hello");
+        stack2.push("haha");
+        stack2.push("world");
+        int size = stack2.size();
+        for (int i = 0; i < size; i++) {
+            System.out.println(stack2.pop());
+        }
+    }
+
+    private void testHashCode() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        String a = String.valueOf(0);
+        String b = String.valueOf(1);
+        String c = "abc黑";
+        int ha = c.hashCode();
+        String d = "0";
+        int hb = d.hashCode();
+        MyTest myTest = new MyTest();
+        ha = myTest.hashCode();
+        MyTest myTest1 = new MyTest();
+        hb = myTest1.hashCode();
+        System.out.println(a.hashCode());
+        System.out.println(b.hashCode());
+        int a1 = 16 & 15;
+        int a2 = 15 & 15;
+        int a3 = 1 & 15;
+        int a4 = 0 & 15;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return super.equals(obj);
+    }
+
+    private void testFanXing() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        //泛型类
+        NumClass<Integer> intCls = new NumClass<>();
+        intCls.setName(1);
+        System.out.println(intCls.getName());
+        //？ extends通配符修饰方法参数时
+        List<Integer> list = new ArrayList<>();
+        list.add(1);
+        list.add(2);
+        list.add(3);
+        readOnlyNumber(list);
+
+
+    }
+
+    private void readOnlyNumber(List<? extends Integer> list) {
+        for (int i = 0; i < list.size(); i++) {
+            Integer n = list.get(i);
+            //？ extends通配符修饰方法参数时，只能只读方法，不能修改list
+            //list.set(0,10);
+            System.out.println(n);
+        }
+    }
+
+    private void testBitCalculate() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        int a = 1 & 0;
+        int b = 2 & 2;
+        int c = 4 & 4;
+        int c1 = 1 & 4;
+        int d = 1 | 4;
+
+        System.out.println(a);
+        System.out.println(b);
+        System.out.println(c);
+        System.out.println(c1);
+        System.out.println(d);
+    }
+
+    private void testSecureRandom() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        SecureRandom sr = null;
+        try {
+            sr = SecureRandom.getInstanceStrong(); // 获取高强度安全随机数生成器
+        } catch (NoSuchAlgorithmException e) {
+            sr = new SecureRandom(); // 获取普通的安全随机数生成器
+        }
+        byte[] buffer = new byte[16];
+        sr.nextBytes(buffer); // 用安全随机数填充buffer
+        System.out.println(Arrays.toString(buffer));
+    }
+
+    private void testBigFloat() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        BigDecimal bigDecimal = new BigDecimal(10);
+        BigDecimal bigDecimal2 = new BigDecimal(3);
+        BigDecimal div = bigDecimal.divide(bigDecimal2, 10, RoundingMode.HALF_UP);
+        System.out.printf("div:%s%n", div);
+        //两个BigDecimal比较不能用equals，必须用compareTo
+        bigDecimal = new BigDecimal("1.2");
+        bigDecimal2 = new BigDecimal("1.20");
+        System.out.printf("equals结果：%s%n", bigDecimal.equals(bigDecimal2));
+        System.out.printf("compareTo结果：%s%n", bigDecimal.compareTo(bigDecimal2));
+    }
+
+    private void testHello() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        String text = "hello";
+//        text += " world";
+        System.out.printf("text:%s%n", text);
+    }
+
+    class NumberSupplier implements Supplier<Integer> {
+
+        private int number;
+
+        @Override
+        public Integer get() {
+            return ++number;
+        }
+    }
+
+    private class NumClass<I extends Number> {
+
+        private I name;
+
+        public I getName() {
+            return name;
+        }
+
+        public void setName(I name) {
+            this.name = name;
+        }
+    }
+
+}
+
