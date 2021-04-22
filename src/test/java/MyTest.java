@@ -6,7 +6,14 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -68,6 +75,28 @@ public class MyTest {
         testForkJoin();
         //线程局部变量
         testThreadLocal();
+        //测试类加载
+        testLoadClass();
+    }
+
+    private void testLoadClass() {
+        // 1）第一次创建对象要加载类.
+        // 2）调用静态方法时要加载类,访问静态属性时会加载类。
+        // 3）加载子类时必定会先加载父类。
+        // 4）创建对象引用不加载类.
+        // 5) 子类调用父类的静态方法时
+        //         (1)当子类没有覆盖父类的静态方法时，只加载父类，不加载子类
+        //         (2)当子类有覆盖父类的静态方法时，既加载父类，又加载子类
+        // 6）访问静态常量，如果编译器可以计算出常量的值，则不会加载类,例如:public static final int a =123;否则会加载类,例如:public static final int a = math.PI。
+        // 7)Class.forName()语句也会加载类
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        Class cls = null;
+        try {
+            cls = Class.forName("TestLoadClass");//会加载类
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        System.out.println("调用完forName：" + cls.getName());
     }
 
     private void testThreadLocal() {
