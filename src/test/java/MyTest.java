@@ -90,12 +90,18 @@ public class MyTest {
         // 6）访问静态常量，如果编译器可以计算出常量的值，则不会加载类,例如:public static final int a =123;否则会加载类,例如:public static final int a = math.PI。
         // 7)Class.forName()语句也会加载类
         System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
-        Class cls = null;
+        Class<?> cls = null;
         try {
+            //ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+            //cls = Class.forName("TestLoadClass", false, classLoader);//不会加载类
             cls = Class.forName("TestLoadClass");//会加载类
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
+        //TestLoadClass testLoadClass = new TestLoadClass();//必然会加载
+        //TestLoadClass testLoadClass1 = null;//类不会加载（4）创建对象引用不加载类）
+        //TestLoadClass[] testLoadClasses = new TestLoadClass[2];//类不会加载吗 (4）创建对象引用不加载类)
+        assert cls != null;
         System.out.println("调用完forName：" + cls.getName());
     }
 
@@ -108,7 +114,7 @@ public class MyTest {
         user.setName("tomato");
         user.setGender("男");
         user.setAge(19);
-        try (UserContext context = new UserContext(user)) {
+        try (UserContext ignored = new UserContext(user)) {
             printName();
             printAage();
         }
@@ -318,10 +324,6 @@ public class MyTest {
         integerStream1.forEach(System.out::println);
     }
 
-    private <R> R abc(Integer integer) {
-        return null;
-    }
-
     private void testSupplierStream() {
         System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
         Stream<Integer> integerStream = Stream.generate(new NumberSupplier());
@@ -414,8 +416,7 @@ public class MyTest {
     }
 
     private void readOnlyNumber(List<? extends Integer> list) {
-        for (int i = 0; i < list.size(); i++) {
-            Integer n = list.get(i);
+        for (Integer n : list) {
             //？ extends通配符修饰方法参数时，只能只读方法，不能修改list
             //list.set(0,10);
             System.out.println(n);
@@ -470,7 +471,7 @@ public class MyTest {
         System.out.printf("text:%s%n", text);
     }
 
-    class NumberSupplier implements Supplier<Integer> {
+    static class NumberSupplier implements Supplier<Integer> {
 
         private int number;
 
@@ -480,7 +481,7 @@ public class MyTest {
         }
     }
 
-    private class NumClass<I extends Number> {
+    private static class NumClass<I extends Number> {
 
         private I name;
 
