@@ -1,3 +1,4 @@
+import com.thoughtworks.xstream.XStream;
 import myAnnotation.CheckAnnotation;
 import org.junit.Test;
 import sun.misc.VM;
@@ -77,6 +78,22 @@ public class MyTest {
         testThreadLocal();
         //测试类加载
         testLoadClass();
+        //测试序列化
+        testXmlSerialize();
+    }
+
+    private void testXmlSerialize() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        //使用工作包：xStream显示xml序列化，反序列化
+        XStream xStream = new XStream();
+        XStream.setupDefaultSecurity(xStream);
+        xStream.processAnnotations(StudentInfo.class);
+        StudentInfo studentInfo = new StudentInfo();
+        studentInfo.setAge(18);
+        studentInfo.setCode("12498");
+        studentInfo.setName("伍六七");
+        String result = xStream.toXML(studentInfo);
+        System.out.println(result);
     }
 
     private void testLoadClass() {
