@@ -21,6 +21,8 @@ import java.util.stream.Stream;
 
 public class MyTest {
 
+    private int stateSet;
+
     @Test
     public void myTest() throws InterruptedException {
 
@@ -80,6 +82,46 @@ public class MyTest {
         testLoadClass();
         //测试序列化
         testXmlSerialize();
+        //测试按位运算判断枚举
+        testBitEnum();
+    }
+
+    private void testBitEnum() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        //原理：1.枚举值定义为1,2,4,8（0001,0010,0100,1000）即每个枚举值对应一个二进制值，且对应比特位都是1
+        //     2.设置枚举值 ，使用按位或运算。枚举1 | 枚举2 =0001 | 0010=0011(枚举s)，可以发现第1，第2比特位都是1，说明同时设置了2个枚举值（枚举1，枚举2）
+        //     3.去掉枚举值 ，使用按位非，按位与运算。枚举s & ~枚举2 =0011 & ~0010=0011 & 1101=0001，可以发现只有第一个比特位是1，说明枚举s只剩下了枚举1
+        //     4.判断枚举值 ，使用按位与运算。枚举s & 枚举2 =0011 & 0010=0010，可以发现0010等于枚举2，说明枚举s包含枚举2
+        //     5.变量枚举s:操作所有枚举值之后的状态值
+        stateSet = 0;
+        setEnum(MyEnum.Left, true);
+        System.out.println("left:" + containEnum(MyEnum.Left));
+        setEnum(MyEnum.Top, true);
+        System.out.println("top:" + containEnum(MyEnum.Top));
+        setEnum(MyEnum.Right, true);
+        System.out.println("right:" + containEnum(MyEnum.Right));
+        setEnum(MyEnum.Bottom, true);
+        System.out.println("bottom:" + containEnum(MyEnum.Bottom));
+        System.out.println("----------------要开始删除枚举啦----------------");
+        setEnum(MyEnum.Top, false);
+        System.out.println("top:" + containEnum(MyEnum.Top));
+    }
+
+    private boolean containEnum(MyEnum top) {
+        if ((stateSet & top.getValue()) == top.getValue()) {
+            return true;
+        }
+        return false;
+    }
+
+    private void setEnum(MyEnum myEnum, boolean flag) {
+        if (flag) {
+            //使用枚举
+            stateSet |= myEnum.getValue();
+        } else {
+            //删除枚举
+            stateSet &= ~myEnum.getValue();
+        }
     }
 
     private void testXmlSerialize() {
