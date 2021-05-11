@@ -365,14 +365,14 @@ public class MyTest {
     private void testMapKey() {
         System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
         Map<String, Integer> integerMap = new HashMap<>();
-        String key1 = "a";
+        String key1 = "A".toLowerCase();
         integerMap.put(key1, 123);
         String key2 = "a";
+        System.out.printf("key1=key2比较结果：%s%n", key1 == key2);
         //key1和key2不是同一个对象，但是key2依然能取到key1的value。那是因为map里面是通过key的hashCode确定value索引的。
-        System.out.printf("key1=key2比较结果：%s%n", key1.equals(key2));
         int value = integerMap.get(key2);
         System.out.printf("value:%s%n", value);
-        System.out.printf("key1.equals(key2)比较结果：%s%n", key1.equals(key2));
+        System.out.printf("key1.equals(key2)比较结果：%s%n", key1.equals(key2));//字符串比较内容
         System.out.printf("key1HashCode:%s key2HashCode:%s%n", key1.hashCode(), key2.hashCode());
     }
 
@@ -396,7 +396,7 @@ public class MyTest {
         list.add(123);
         list.add(29);
         list.add(8);
-        Integer[] array = list.toArray(new Integer[list.size()]);
+        Integer[] array = list.toArray(new Integer[0]);
         System.out.printf("array:%s%n", array.length);
         Integer[] array2 = new Integer[list.size()];
         list.toArray(array2);
@@ -430,22 +430,14 @@ public class MyTest {
 
     private void testHashCode() {
         System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
-        String a = String.valueOf(0);
-        String b = String.valueOf(1);
-        String c = "abc黑";
-        int ha = c.hashCode();
-        String d = "0";
-        int hb = d.hashCode();
-        MyTest myTest = new MyTest();
-        ha = myTest.hashCode();
-        MyTest myTest1 = new MyTest();
-        hb = myTest1.hashCode();
-        System.out.println(a.hashCode());
-        System.out.println(b.hashCode());
-        int a1 = 16 & 15;
-        int a2 = 15 & 15;
-        int a3 = 1 & 15;
-        int a4 = 0 & 15;
+        String a1 = String.valueOf(0);
+        String a2 = "0";
+        System.out.println("a1 hashCode:" + a1.hashCode());
+        System.out.println("a2 hashCode:" + a2.hashCode());
+        String b1 = String.valueOf(1);
+        String b2 = "1";
+        System.out.println("b1 hashCode:" + b1.hashCode());
+        System.out.println("b2 hashCode:" + b2.hashCode());
     }
 
     @Override
@@ -484,22 +476,20 @@ public class MyTest {
 
     private void testBitCalculate() {
         System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
-        int a = 1 & 0;
-        int b = 2 & 2;
-        int c = 4 & 4;
+        int a = 1 & 0;//按位与0等于0
+        int b = 2 & 2;//2个相等数按位与等于其本身
         int c1 = 1 & 4;
         int d = 1 | 4;
 
         System.out.println(a);
         System.out.println(b);
-        System.out.println(c);
         System.out.println(c1);
         System.out.println(d);
     }
 
     private void testSecureRandom() {
         System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
-        SecureRandom sr = null;
+        SecureRandom sr;
         try {
             sr = SecureRandom.getInstanceStrong(); // 获取高强度安全随机数生成器
         } catch (NoSuchAlgorithmException e) {
