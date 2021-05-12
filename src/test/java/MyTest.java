@@ -94,7 +94,7 @@ public class MyTest {
         //原理：色值范围0-255，所以用2位16进制刚好能满足范围：0-ff
         Color read = new Color(0xff0000);//红色
         Color read2 = new Color(255, 0, 0);//红色
-        //Color内部实际透明+rgb通过二级制转换存成一个大整数
+        //Color内部实际存储方式：透明+rgb通过16进制存成一个整数
         int alpha = 255 & 0xff;
         //int alpha2 = 0b11111111;
         int r = 255 & 0xff;
