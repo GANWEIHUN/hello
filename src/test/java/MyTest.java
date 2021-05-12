@@ -3,6 +3,7 @@ import myAnnotation.CheckAnnotation;
 import org.junit.Test;
 import sun.misc.VM;
 
+import java.awt.Color;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.security.NoSuchAlgorithmException;
@@ -34,6 +35,8 @@ public class MyTest {
         testSecureRandom();
         //位运算
         testBitCalculate();
+        //16进制颜色
+        testHexColor();
         //泛型
         testFanXing();
         //对象的hashCode
@@ -84,6 +87,32 @@ public class MyTest {
         testXmlSerialize();
         //测试按位运算判断枚举
         testBitEnum();
+    }
+
+    private void testHexColor() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        //原理：色值范围0-255，所以用2位16进制刚好能满足范围：0-ff
+        Color read = new Color(0xff0000);//红色
+        Color read2 = new Color(255, 0, 0);//红色
+        //Color内部实际透明+rgb通过二级制转换存成一个大整数
+        int alpha = 255 & 0xff;
+        //int alpha2 = 0b11111111;
+        int r = 255 & 0xff;
+        //int r2 = 0b11111111;
+        int g = 0 & 0xff;
+        //int g2 = 0b0;
+        int b = 0 & 0xff;
+        //int b2 = 0b0;
+        int value = alpha << 24 | r << 16 | g << 8 | b << 0;
+        //int value2 = 0b11111111111111110000000000000000;
+        System.out.println("value和read2比较:" + (value == read2.getRGB()));
+        Color green = new Color(0x00ff00);//绿色
+        Color blue = new Color(0x0000ff);//蓝色
+        Color c1 = new Color(0x323232);
+        System.out.println("read:" + read.getRGB());
+        System.out.println("green:" + green.getRGB());
+        System.out.println("blue:" + blue.getRGB());
+        System.out.println("c1:" + c1.getRGB());
     }
 
     private void testBitEnum() {
