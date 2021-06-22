@@ -5,16 +5,17 @@ public class ReverseArray<T> implements Iterable<T> {
 
     private final T[] array;
 
+    @SafeVarargs
     public ReverseArray(T... t) {
         array = Arrays.copyOfRange(t, 0, t.length);
     }
 
     @Override
     public Iterator<T> iterator() {
-        return new ReverseIterator<>();
+        return new ReverseIterator();
     }
 
-    class ReverseIterator<T> implements Iterator<T> {
+    class ReverseIterator implements Iterator<T> {
 
         private int index = array.length;
 
@@ -26,7 +27,7 @@ public class ReverseArray<T> implements Iterable<T> {
         @Override
         public T next() {
             index--;
-            return (T) array[index];
+            return array[index];
         }
     }
 }
