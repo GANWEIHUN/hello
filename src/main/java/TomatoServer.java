@@ -1,68 +1,65 @@
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import common.Action1;
+
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author tomato
  * @date 2021/03/04 15:50
  */
 public class TomatoServer {
+    private Action1<String> displayTextAction;
+
     public void start() throws IOException {
         ServerSocket serverSocket = new ServerSocket(2021);
-        Thread thread = new Thread(() -> {
-            while (true) {
-                try {
-                    Socket client = serverSocket.accept();
-                    System.out.println("新进消息");
-                    Thread thread1 = new Thread(new HandleClient(client));
-                    thread1.start();
-                    Thread.sleep(1000);
-                } catch (IOException | InterruptedException e) {
-                    e.printStackTrace();
-                }
+        displayTextAction.invoke("启动服务成功！\n");
+        while (true) {
+            Socket client = serverSocket.accept();
+            Thread thread1 = new Thread(new Handler(client, displayTextAction));
+            thread1.start();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException exception) {
+                exception.printStackTrace();
             }
-        });
-        //thread.setDaemon(true);//守护线程，保证和进程结束退出。
-        thread.start();
-        System.out.println("启动服务成功！");
+        }
     }
 
-    public void reply(String text) {
-
+    void setDisplayTextAction(Action1<String> displayTextAction) {
+        this.displayTextAction = displayTextAction;
     }
 
-    private class HandleClient implements Runnable {
-
+    private static class Handler implements Runnable {
         private final Socket client;
+        private final Action1<String> displayTextAction;
 
-        private HandleClient(Socket socket) {
+        private Handler(Socket socket, Action1<String> displayTextAction) {
             client = socket;
+            this.displayTextAction = displayTextAction;
         }
 
         @Override
         public void run() {
-            try {
-                ObjectInputStream inputStream = new ObjectInputStream(client.getInputStream());
-                Object obj = inputStream.readObject();
-                if (obj instanceof String) {
-                    System.out.println("接收到客户端请求：" + obj);
+            try (OutputStream outputStream = client.getOutputStream(); InputStream inputStream = client.getInputStream()) {
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+                BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
+                bufferedWriter.write("hi I`m tomatoServer\n");
+                bufferedWriter.flush();//主动推送给客户端
+                while (true) {
+                    String line = bufferedReader.readLine();
+                    displayTextAction.invoke("接收到客户端请求：" + line + "\n");
+                    //回复客户端请求
+                    bufferedWriter.write("replay:" + line + "\n");
+                    bufferedWriter.flush();//主动推送给客户端
+                    if ("bye".equals(line)) {
+                        displayTextAction.invoke("客户端断开链接" + "\n");
+                        break;
+                    }
                 }
-                ObjectOutputStream outputStream = new ObjectOutputStream(client.getOutputStream());
-                //回复客户端请求
-                outputStream.writeObject("hello world");
-                inputStream.close();
-                outputStream.close();
-            } catch (IOException | ClassNotFoundException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
-            } finally {
-                try {
-                    client.close();
-                    System.out.println("关闭客户端");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
             }
         }
     }

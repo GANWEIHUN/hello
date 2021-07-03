@@ -3,10 +3,9 @@ package ui;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author tomato
@@ -14,34 +13,45 @@ import java.net.Socket;
  */
 public class ClientFrame extends JFrame {
 
-    private final JTextArea textArea;
+    private final JTextArea displayTextArea;
+    private Socket socket;
 
     private ClientFrame(String[] args) {
         setTitle("tomato客户端");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(800, 600);
+        setSize(400, 600);
         setLocationRelativeTo(null);
         JPanel contentPane = new JPanel();
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
         contentPane.setLayout(new BorderLayout(0, 0));
         setContentPane(contentPane);
-        textArea = new JTextArea();
-        textArea.append("我是文本！");
+        displayTextArea = new JTextArea();
+        displayTextArea.setEditable(false);
+        displayTextArea.setBackground(new Color(255, 250, 227));
         if (args != null) {
-            for (int i = 0; i < args.length; i++) {
-                textArea.append(args[i]);
+            for (String arg : args) {
+                displayTextArea.append(arg);
             }
         }
-        contentPane.add(textArea);
+        contentPane.add(displayTextArea);
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        bottomPanel.setLayout(new BorderLayout(0, 0));
+        bottomPanel.setSize(0, 40);
+        contentPane.add(bottomPanel, BorderLayout.SOUTH);
+        JTextField inputTextField = new JFormattedTextField();
+        inputTextField.requestFocus();
+        bottomPanel.add(inputTextField);
         String tex = "发送";
         JButton button1 = new JButton(tex);    //创建JButton对
+        button1.setSize(100, 0);
         button1.setFont(new Font("黑体", Font.BOLD, 16));    //修改字体样式
         button1.addActionListener(e -> {
-            String text = textArea.getText();
+            String text = inputTextField.getText();
+            inputTextField.setText("");
             senderMsg(text);
         });
-        contentPane.add(button1, BorderLayout.SOUTH);
-        //initClient();
+        bottomPanel.add(button1, BorderLayout.EAST);
     }
 
     public static void main(String[] args) {
@@ -49,40 +59,29 @@ public class ClientFrame extends JFrame {
         frame.setVisible(true);
     }
 
-    private void initClient() {
-        Socket socket = null;
-        try {
-            socket = new Socket("localhost", 2021);
-            ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
-            outputStream.writeObject("我是tomato");
-            //outputStream.close();
-            ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-            Object result = inputStream.readObject();
-            System.out.println("新进答复！" + result);
-            if (result instanceof String) {
-                if (((String) result).contains("ok")) {
-                    textArea.append("成功接收服务端返回信息，结束此次请求！");
-                }
-            }
-            //inputStream.close();
-            Thread.sleep(1000);
-            //socket.close();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } finally {
+    private void senderMsg(String text) {
+        if (socket == null || socket.isClosed()) {
             try {
-                socket.close();
+                socket = new Socket("localhost", 2021);//链接到指定端口服务器
+                displayTextArea.append("链接服务器成功！\n");
             } catch (IOException e) {
+                displayTextArea.append(e.getMessage());
                 e.printStackTrace();
             }
         }
-    }
-
-    private void senderMsg(String text) {
-        initClient();
+        try (OutputStream outputStream = socket.getOutputStream(); InputStream inputStream = socket.getInputStream()) {
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+            displayTextArea.append(bufferedReader.readLine());
+            BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
+            bufferedWriter.write(text);
+            bufferedWriter.flush();//主动推送到服务器
+            if ("bye".equals(text)) {
+                socket.close();
+                socket = null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            displayTextArea.append(e.getMessage());
+        }
     }
 }
