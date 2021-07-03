@@ -22,6 +22,8 @@ public class TomatoServer {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException exception) {
+                client.close();
+                displayTextAction.invoke("关闭客户端链接：" + exception.getMessage());
                 exception.printStackTrace();
             }
         }
@@ -45,20 +47,28 @@ public class TomatoServer {
             try (OutputStream outputStream = client.getOutputStream(); InputStream inputStream = client.getInputStream()) {
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
                 BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
-                bufferedWriter.write("hi I`m tomatoServer\n");
+                bufferedWriter.write("TomatoServer");
+                bufferedWriter.newLine();
                 bufferedWriter.flush();//主动推送给客户端
                 while (true) {
-                    String line = bufferedReader.readLine();
-                    displayTextAction.invoke("接收到客户端请求：" + line + "\n");
-                    //回复客户端请求
-                    bufferedWriter.write("replay:" + line + "\n");
-                    bufferedWriter.flush();//主动推送给客户端
-                    if ("bye".equals(line)) {
-                        displayTextAction.invoke("客户端断开链接" + "\n");
+                    try {
+                        String line = bufferedReader.readLine();
+                        displayTextAction.invoke("接收到客户端请求：" + line + "\n");
+                        //回复客户端请求
+                        bufferedWriter.write(line);
+                        bufferedWriter.newLine();
+                        bufferedWriter.flush();//主动推送给客户端
+                        if ("bye".equals(line)) {
+                            displayTextAction.invoke("客户端断开链接" + "\n");
+                            break;
+                        }
+                    } catch (Exception exception) {
+                        displayTextAction.invoke(exception.getMessage() + "\n");
                         break;
                     }
                 }
             } catch (IOException e) {
+                displayTextAction.invoke(e.getMessage());
                 e.printStackTrace();
             }
         }

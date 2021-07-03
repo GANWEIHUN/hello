@@ -15,6 +15,8 @@ public class ClientFrame extends JFrame {
 
     private final JTextArea displayTextArea;
     private Socket socket;
+    private BufferedReader bufferedReader;
+    private BufferedWriter bufferedWriter;
 
     private ClientFrame(String[] args) {
         setTitle("tomato客户端");
@@ -57,31 +59,42 @@ public class ClientFrame extends JFrame {
     public static void main(String[] args) {
         ClientFrame frame = new ClientFrame(args);
         frame.setVisible(true);
+        frame.connection();
     }
 
     private void senderMsg(String text) {
         if (socket == null || socket.isClosed()) {
-            try {
-                socket = new Socket("localhost", 2021);//链接到指定端口服务器
-                displayTextArea.append("链接服务器成功！\n");
-            } catch (IOException e) {
-                displayTextArea.append(e.getMessage());
-                e.printStackTrace();
-            }
+            connection();
         }
-        try (OutputStream outputStream = socket.getOutputStream(); InputStream inputStream = socket.getInputStream()) {
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-            displayTextArea.append(bufferedReader.readLine());
-            BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
+        try {
             bufferedWriter.write(text);
+            bufferedWriter.newLine();//必须加上这句，否则不能连续通信
             bufferedWriter.flush();//主动推送到服务器
+            displayTextArea.append("收到服务端回复：" + bufferedReader.readLine() + "\n");
             if ("bye".equals(text)) {
+                bufferedReader.close();
+                bufferedWriter.close();
                 socket.close();
-                socket = null;
+                displayTextArea.append("断开链接！/n");
             }
         } catch (IOException e) {
             e.printStackTrace();
             displayTextArea.append(e.getMessage());
+        }
+    }
+
+    private void connection() {
+        try {
+            socket = new Socket("localhost", 2021);//链接到指定服务器和端口
+            displayTextArea.append("链接服务器成功！");
+            OutputStream outputStream = socket.getOutputStream();
+            InputStream inputStream = socket.getInputStream();
+            bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+            bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
+            displayTextArea.append("服务器名称：" + bufferedReader.readLine() + "\n");
+        } catch (IOException e) {
+            displayTextArea.append(e.getMessage());
+            e.printStackTrace();
         }
     }
 }
