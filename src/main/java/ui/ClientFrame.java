@@ -89,6 +89,7 @@ public class ClientFrame extends JFrame {
             displayTextArea.append("链接服务器成功！");
             OutputStream outputStream = socket.getOutputStream();
             InputStream inputStream = socket.getInputStream();
+            //原理：服务端和客户端连接成功之后，通过inputStream,outputStream进行通信（数据交换）
             bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
             bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
             displayTextArea.append("服务器名称：" + bufferedReader.readLine() + "\n");
