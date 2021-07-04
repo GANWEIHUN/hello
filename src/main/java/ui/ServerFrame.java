@@ -1,3 +1,5 @@
+package ui;
+
 import common.Action1;
 
 import javax.swing.*;
@@ -46,6 +48,7 @@ public class ServerFrame extends JFrame {
         try {
             Action1<String> displayTextAction = displayTextArea::append;
             server.setDisplayTextAction(displayTextAction);
+            //server.setSocketType(SocketType.UDP);
             server.start();
         } catch (IOException e) {
             e.printStackTrace();
