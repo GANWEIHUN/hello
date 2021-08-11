@@ -182,7 +182,7 @@ public class MyTest {
         try {
             //ClassLoader classLoader = ClassLoader.getSystemClassLoader();
             //cls = Class.forName("TestLoadClass", false, classLoader);//会加载类，不会初始化，不会执行静态代码块
-            cls = Class.forName("TestLoadClass");//会加载类
+            cls = Class.forName("TestLoadClass");//会加载类，会执行静态代码块
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
