@@ -16,6 +16,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -77,6 +78,8 @@ public class MyTest {
         testThreads();
         //任务队列
         testTaskQueue();
+        //获取异步结果
+        testCompletableFuture();
         //fork/join线程池
         testForkJoin();
         //线程局部变量
@@ -92,7 +95,7 @@ public class MyTest {
     private void testHexColor() {
         System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
         //原理：色值范围0-255，所以用2位16进制刚好能满足范围：0-ff
-        Color read = new Color(0xff0000);//红色
+        Color read = new Color(0xFF0000);//红色
         Color read2 = new Color(255, 0, 0);//红色
         //Color内部实际存储方式：透明+rgb通过16进制存成一个整数
         int alpha = 255 & 0xff;
@@ -191,6 +194,41 @@ public class MyTest {
         //TestLoadClass[] testLoadClasses = new TestLoadClass[2];//类不会加载吗 (4）创建对象引用不加载类)
         assert cls != null;
         System.out.println("调用完forName：" + cls.getName());
+    }
+
+    private void testCompletableFuture() {
+        //原理 ：java8之后提供completableFuture，支持获取异步处理结果
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        //调用supplyAsync方法会把执行对象交给默认线程池处理
+        System.out.println("创建completableFuture");
+        CompletableFuture<Object> completableFuture = CompletableFuture.supplyAsync(() -> {
+            int count = 0;
+            try {
+                for (int i = 0; i < 9; i++) {
+                    count++;
+                    System.out.println("计算处理中：" + count);
+                    Thread.sleep(500);
+                }
+            } catch (InterruptedException exception) {
+                exception.printStackTrace();
+            }
+            return count;
+        });
+        //异步处理完成
+        completableFuture.thenAccept(o -> System.out.println("异步处理结果：" + o));
+        //异步处理异常
+        completableFuture.exceptionally(throwable -> {
+            System.out.println("异步处理异常");
+            throwable.printStackTrace();
+            return null;
+        });
+        System.out.println("completableFuture调用完毕");
+        //主线程不要立刻结束，否则completableFuture使用的默认线程池会立刻关闭
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException exception) {
+            exception.printStackTrace();
+        }
     }
 
     private void testThreadLocal() {
