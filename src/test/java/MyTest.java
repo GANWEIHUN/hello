@@ -4,6 +4,7 @@ import org.junit.Test;
 import sun.misc.VM;
 
 import java.awt.Color;
+import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.security.NoSuchAlgorithmException;
@@ -90,6 +91,16 @@ public class MyTest {
         testXmlSerialize();
         //测试按位运算判断枚举
         testBitEnum();
+        //代理
+        testProxy();
+    }
+
+    private void testProxy() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        //原理：代理模式在不影响接口代码的基础上，对目标接口方法的调用进行逻辑控制，比如：权限检查
+        QueryService proxy = (QueryService) Proxy.newProxyInstance(QueryService.class.getClassLoader(), new Class[]{QueryService.class}, new MyInvocationHandler(UserType.Admin));
+        Object result = proxy.query(null);
+        System.out.println("结果：" + result);
     }
 
     private void testHexColor() {
