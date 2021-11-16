@@ -26,9 +26,15 @@ public class MyTest {
 
     private int stateSet;
 
+    public static void main(String[] args) {
+        //用于生成代理类class文件
+        //System.getProperties().put("sun.misc.ProxyGenerator.saveGeneratedFiles", "true");
+        //MyTest myTest = new MyTest();
+        //myTest.testProxy();
+    }
+
     @Test
     public void myTest() throws InterruptedException {
-
         //hello world
         testHello();
         //大型小数
