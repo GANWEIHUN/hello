@@ -1,3 +1,5 @@
+import car.Car;
+import car.CarBuilder;
 import com.thoughtworks.xstream.XStream;
 import myAnnotation.CheckAnnotation;
 import org.junit.Test;
@@ -348,9 +350,10 @@ public class MyTest {
 
     private void testBuilder() {
         System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        //将一个复杂对象的构建与它的表示分离，使得同样的构建过程可以创建不同的表示。
         //建造者模式，创建一个完整对象由多个部件组成。参考stringBuilder链式代码stringBuilder.append().append().append()
-        MyCar myCar = new MyCar();
-        myCar.setTyre(new RubberTyre()).setDriveMode(new AutoMode()).setEngine(new InhaleEngine()).setEnginePosition(new FrontPosition()).run();
+        Car car = CarBuilder.getBuilder().setEngine(new InhaleEngine()).setEnginePosition(new FrontPosition()).setDriveMode(new AutoMode()).setTyre(new RubberTyre()).build();
+        car.run();
     }
 
     private void testStrategy() {

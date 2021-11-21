@@ -1,3 +1,5 @@
+import car.Engine;
+
 public class InhaleEngine implements Engine {
     private final String name;
 

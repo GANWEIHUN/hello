@@ -1,3 +1,5 @@
+import car.DriveMode;
+
 public class AutoMode implements DriveMode {
     private final String name;
 

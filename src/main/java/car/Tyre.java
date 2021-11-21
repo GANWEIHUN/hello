@@ -1,6 +1,8 @@
+package car;
+
 /**
  * 轮胎
  */
-interface Tyre {
+public interface Tyre {
     Tyre getTyre();
 }

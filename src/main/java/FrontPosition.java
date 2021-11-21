@@ -1,3 +1,5 @@
+import car.EnginePosition;
+
 public class FrontPosition implements EnginePosition {
     private final String name;
 

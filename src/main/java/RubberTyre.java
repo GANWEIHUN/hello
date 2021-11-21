@@ -1,3 +1,5 @@
+import car.Tyre;
+
 public class RubberTyre implements Tyre {
     private final String name;
 
