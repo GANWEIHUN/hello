@@ -2,6 +2,10 @@ import car.Car;
 import car.CarBuilder;
 import com.thoughtworks.xstream.XStream;
 import myAnnotation.CheckAnnotation;
+import observer.Admin;
+import observer.Customer;
+import observer.Product;
+import observer.Store;
 import org.junit.Test;
 import sun.misc.VM;
 
@@ -101,6 +105,32 @@ public class MyTest {
         testBitEnum();
         //代理
         testProxy();
+        //观察者
+        testObserver();
+    }
+
+    private void testObserver() {
+        System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        //观察者模式，也叫发布/订阅模式（pub/sub），是一种一对多的消息通知机制，使得双方无需关心对方，只关心通知本身。
+        Store store = new Store();
+        store.addObserver(new Admin());
+        store.addObserver(new Customer());
+        Product product = new Product();
+        product.setName("香蕉");
+        product.setPrice(3.5f);
+        store.addNewProduct(product);
+        Product product2 = new Product();
+        product2.setName("火龙果");
+        product2.setPrice(10.0f);
+        store.addNewProduct(product2);
+        product.setPrice(3.0f);
+        store.changePrice(product);
+        //主线程等待一下，要不然异步线程打印不出来
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException exception) {
+            exception.printStackTrace();
+        }
     }
 
     private void testProxy() {
