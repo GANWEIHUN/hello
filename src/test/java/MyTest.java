@@ -236,6 +236,7 @@ public class MyTest {
             //ClassLoader classLoader = ClassLoader.getSystemClassLoader();
             //cls = Class.forName("TestLoadClass", false, classLoader);//会加载类，不会初始化，不会执行静态代码块
             cls = Class.forName("TestLoadClass");//会加载类，会执行静态代码块
+            //Object testLoadClass = cls.newInstance();//实例化，会进入构造函数
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
