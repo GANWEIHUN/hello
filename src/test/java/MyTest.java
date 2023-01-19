@@ -135,9 +135,11 @@ public class MyTest {
 
     private void testProxy() {
         System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
-        //原理：代理模式通过封装一个已有接口，并向调用方返回相同的接口类型，能让调用方在不改变任何代码的前提下增强某些功能（例如，鉴权、延迟加载、连接池复用等）。使用Proxy模式要求调用方持有接口，作为Proxy的类也必须实现相同的接口类型。
+        //原理：代理模式通过封装一个已有接口，并向调用方返回相同的接口类型，能让调用方在不改变任何代码的前提下增强某些功能（例如，鉴权、延迟加载、连接池复用等）。
+        // 使用Proxy模式要求调用方持有接口，作为Proxy的类也必须实现相同的接口类型。
         //Proxy.newProxyInstance返回$proxy0实际上是QueryService的代理类，他实现了QueryService接口，所以这里$proxy0能强转为QueryService
-        QueryService proxy = (QueryService) Proxy.newProxyInstance(QueryService.class.getClassLoader(), new Class[]{QueryService.class}, new MyInvocationHandler(UserType.Admin));
+        QueryService proxy = (QueryService) Proxy.newProxyInstance(QueryService.class.getClassLoader(),
+                new Class[]{QueryService.class}, new MyInvocationHandler(UserType.Admin));
         Object result = proxy.query(null);
         System.out.println("结果：" + result);
     }
@@ -383,7 +385,8 @@ public class MyTest {
         System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
         //将一个复杂对象的构建与它的表示分离，使得同样的构建过程可以创建不同的表示。
         //建造者模式，创建一个完整对象由多个部件组成。参考stringBuilder链式代码stringBuilder.append().append().append()
-        Car car = CarBuilder.getBuilder().setEngine(new InhaleEngine()).setEnginePosition(new FrontPosition()).setDriveMode(new AutoMode()).setTyre(new RubberTyre()).build();
+        Car car = CarBuilder.getBuilder().setEngine(new InhaleEngine()).setEnginePosition(new FrontPosition()).
+                setDriveMode(new AutoMode()).setTyre(new RubberTyre()).build();
         car.run();
     }
 
@@ -453,7 +456,8 @@ public class MyTest {
         //原理：功能拆分一个个类，然后组合实现一个大的功能. 类似一棵树部分-整体的层次结构
         ElementNode root = new ElementNode("school");
         root.add(new ElementNode("1班").add(new TextNode("张三")).add(new TextNode("王五")));
-        root.add(new ElementNode("2班").add(new TextNode("jack")).add(new TextNode("tomato")).add(new CommentNode("注释")).add(new TextNode("窃格瓦拉")));
+        root.add(new ElementNode("2班").add(new TextNode("jack")).add(new TextNode("tomato")).
+                add(new CommentNode("注释")).add(new TextNode("窃格瓦拉")));
         System.out.println(root.toXml());
     }
 
@@ -661,6 +665,5 @@ public class MyTest {
             this.name = name;
         }
     }
-
 }
 
