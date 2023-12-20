@@ -135,9 +135,12 @@ public class MyTest {
 
     private void testProxy() {
         System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+        //有没有可能不编写实现类，直接在运行期创建某个interface的实例呢？
+        //这是可能的，因为Java标准库提供了一种动态代理（Dynamic Proxy）的机制：可以在运行期动态创建某个interface的实例。
         //原理：代理模式通过封装一个已有接口，并向调用方返回相同的接口类型，能让调用方在不改变任何代码的前提下增强某些功能（例如，鉴权、延迟加载、连接池复用等）。
         // 使用Proxy模式要求调用方持有接口，作为Proxy的类也必须实现相同的接口类型。
         //Proxy.newProxyInstance返回$proxy0实际上是QueryService的代理类，他实现了QueryService接口，所以这里$proxy0能强转为QueryService
+        //动态代理实际上是JVM在运行期动态创建class字节码并加载的过程，它并没有什么黑魔法
         QueryService proxy = (QueryService) Proxy.newProxyInstance(QueryService.class.getClassLoader(),
                 new Class[]{QueryService.class}, new MyInvocationHandler(UserType.Admin));
         Object result = proxy.query(null);
