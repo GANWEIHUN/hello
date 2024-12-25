@@ -143,7 +143,7 @@ public class MyTest {
         //动态代理实际上是JVM在运行期动态创建class字节码并加载的过程，它并没有什么黑魔法
         QueryService proxy = (QueryService) Proxy.newProxyInstance(QueryService.class.getClassLoader(),
                 new Class[]{QueryService.class}, new MyInvocationHandler(UserType.Admin));
-        Object result = proxy.query(null);
+        Object result = proxy.query("A");
         System.out.println("结果：" + result);
     }
 
