@@ -1,3 +1,4 @@
+import algorithm.AssignmentProblem;
 import car.Car;
 import car.CarBuilder;
 import com.thoughtworks.xstream.XStream;
@@ -7,6 +8,7 @@ import observer.Customer;
 import observer.Product;
 import observer.Store;
 import org.junit.Test;
+import sun.awt.image.PixelConverter;
 import sun.misc.VM;
 
 import java.awt.Color;
@@ -107,6 +109,12 @@ public class MyTest {
         testProxy();
         //观察者
         testObserver();
+        //分支限界
+        testBranchAndBound();
+    }
+
+    private void testBranchAndBound() {
+        AssignmentProblem.main(null);
     }
 
     private void testObserver() {
