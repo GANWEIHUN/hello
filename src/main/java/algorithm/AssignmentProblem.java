@@ -45,8 +45,10 @@ public class AssignmentProblem {
     }
 
     // 计算下界（最小可能成本）
-    private int calculateLowerBound(int[] assigned) {
-        int bound = 0;
+    private int calculateLowerBound(Node node) {
+        //已分配成本
+        int bound = node.cost;
+        int[] assigned = node.assigned;
         boolean[] assignedWorkers = new boolean[n];
 
         // 标记已分配的工人
@@ -56,16 +58,28 @@ public class AssignmentProblem {
             }
         }
 
-        // 计算下界：已分配成本 + 剩余任务的最小可能成本
+        // 剩余任务的最小可能成本
         for (int i = 0; i < n; i++) {
             if (assigned[i] == -1) {
                 int min = Integer.MAX_VALUE;
+                int lastAssignedWorker = -1;
                 for (int j = 0; j < n; j++) {
                     if (!assignedWorkers[j] && costMatrix[j][i] < min) {
                         min = costMatrix[j][i];
+                        // （临时）标记该工人为已分配
+                        assignedWorkers[j] = true;
+                        if (lastAssignedWorker != -1) {
+                            // 恢复上一个工人的未分配状态
+                            assignedWorkers[lastAssignedWorker] = false;
+                        }
+                        lastAssignedWorker = j;
                     }
                 }
                 bound += min;
+                // 恢复该工人的未分配状态
+                if (lastAssignedWorker != -1) {
+                    assignedWorkers[lastAssignedWorker] = false;
+                }
             }
         }
 
@@ -80,7 +94,7 @@ public class AssignmentProblem {
         int[] initialAssigned = new int[n];
         Arrays.fill(initialAssigned, -1);
         Node root = new Node(-1, 0, initialAssigned, null);
-        root.lowerBound = calculateLowerBound(root.assigned);
+        root.lowerBound = calculateLowerBound(root);
         pq.add(root);
 
         while (!pq.isEmpty()) {
@@ -104,7 +118,7 @@ public class AssignmentProblem {
                     int newCost = minNode.cost + costMatrix[nextWorker][task];
 
                     Node child = new Node(nextWorker, newCost, newAssigned, minNode);
-                    child.lowerBound = child.cost + calculateLowerBound(child.assigned);
+                    child.lowerBound = calculateLowerBound(child);
 
                     // 只有当下界小于当前最小成本时才扩展节点
                     if (child.lowerBound < minCost) {
