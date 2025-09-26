@@ -1,4 +1,4 @@
-package ui;
+package ui.socket;
 
 import common.Action1;
 

@@ -1,4 +1,4 @@
-package ui;
+package ui.socket;
 
 public enum SocketType {
     TCP,//传输控制协议。一种面向连接，可靠传输的协议

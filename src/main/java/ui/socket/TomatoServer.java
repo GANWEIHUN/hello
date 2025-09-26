@@ -1,4 +1,4 @@
-package ui;
+package ui.socket;
 
 import common.Action1;
 
@@ -90,7 +90,7 @@ public class TomatoServer {
                 //原理：服务端和客户端连接成功之后，通过inputStream,outputStream进行通信（数据交换）
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
                 BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
-                bufferedWriter.write("ui.TomatoServer");
+                bufferedWriter.write("ui.socket.TomatoServer");
                 bufferedWriter.newLine();
                 bufferedWriter.flush();//主动推送给客户端
                 while (true) {
