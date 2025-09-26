@@ -1,3 +1,4 @@
+import algorithm.AVLTreeDemo;
 import algorithm.AssignmentProblem;
 import car.Car;
 import car.CarBuilder;
@@ -111,6 +112,12 @@ public class MyTest {
         testObserver();
         //分支限界
         testBranchAndBound();
+        //二叉树
+        testAVLTree();
+    }
+
+    private void testAVLTree() {
+        AVLTreeDemo.main(null);
     }
 
     private void testBranchAndBound() {
