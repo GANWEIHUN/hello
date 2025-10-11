@@ -47,7 +47,7 @@ function retrieveWorkContent(workContent, retrieveScope) {
 
         // 如果没有内容项，返回空内容提示
         if (allItems.length === 0) {
-            return `### ${retrieveScope}\n暂无内容`;
+            return `### ${retrieveScope}\n<!--暂无内容-->`;
         }
 
         // 重新排序序号
@@ -225,7 +225,9 @@ function buildWeekReport(vaultPath, debug = false) {
         return result;
     } catch (error) {
         // 捕获并返回所有错误
-        const errorMessage = `# 【错误】周报生成失败\n\n## 错误详情\n- 错误信息: ${error.message}\n- 当前使用的Vault路径: ${vaultPath || '未提供'}\n\n## 请检查\n1. Vault路径是否正确\n2. 日报文件格式是否符合要求\n3. 脚本是否有权限读取文件`;
+        const errorMessage = `# 【错误】周报生成失败\n\n
+        ## 错误详情\n- 错误信息: ${error.message}\n- 当前使用的Vault路径: ${vaultPath || '未提供'}\n\n
+        ## 请检查\n1. Vault路径是否正确\n2. 日报文件格式是否符合要求\n3. 脚本是否有权限读取文件`;
         console.error(errorMessage);
         return errorMessage;
     }
