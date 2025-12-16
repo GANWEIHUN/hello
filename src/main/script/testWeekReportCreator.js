@@ -81,7 +81,15 @@ function runTests() {
     try {
         // 测试 buildWeekReport 函数调用
         console.log('开始调用 buildWeekReport 函数...');
-        const weekReportContent = buildWeekReport(__dirname, true);
+
+        // 将 __dirname 转换为日报目录路径
+        // __dirname = F:\github\hello\src\main\script
+        // 需要转换为: F:\github\hello\src\
+        const path = require('path');
+        const dailyPath = path.join(__dirname, '..', '..');
+        console.log(`日报目录路径: ${dailyPath}`);
+
+        const weekReportContent = buildWeekReport(dailyPath, true, true);
         console.log('函数调用完成\n');
 
         // 验证返回的周报内容
