@@ -287,11 +287,11 @@ function buildCurWeekContent(vaultPath) {
 /**
  * 构建周报内容，并可选删除空文件
  * @param {string} vaultPath - Obsidian Vault的路径（可选，如果不提供将尝试自动获取）
- * @param {boolean} debug - 是否返回日志信息，默认为false
  * @param {boolean} deleteEmpty - 是否删除没有工作内容的文件，默认为false
+ * @param {boolean} debug - 是否返回日志信息，默认为false
  * @returns {string} 生成的周报内容
  */
-function buildWeekReport(vaultPath, debug = false, deleteEmpty = false) {
+function buildWeekReport(vaultPath, deleteEmpty = false, debug = false) {
     try {
         // 记录开始时间
         const startTime = new Date();
