@@ -1,21 +1,21 @@
-const {readFileSync, existsSync, writeFileSync, readdirSync, statSync} = require("node:fs");
-const {join, extname, basename} = require("node:path");
+const {readFileSync, existsSync, writeFileSync, readdirSync} = require("node:fs");
+const {join, extname} = require("node:path");
 
 /**
  * 获取指定年份的所有周报文件
- * @param {string} vaultPath - 周报所在的目录路径
+ * @param {string} weekReportPath - 周报所在的目录路径
  * @param {number} year - 年份（可选，如果不提供则从路径中提取）
  * @returns {Array} 包含文件信息的数组
  */
-function getAllWeeklyReports(vaultPath, year = null) {
+function getAllWeeklyReports(weekReportPath, year = null) {
     try {
-        if (!existsSync(vaultPath)) {
-            throw new Error(`目录不存在: ${vaultPath}`);
+        if (!existsSync(weekReportPath)) {
+            throw new Error(`目录不存在: ${weekReportPath}`);
         }
 
         // 如果没有提供年份，尝试从路径中提取
         if (!year) {
-            const yearMatch = vaultPath.match(/(\d{4})年/);
+            const yearMatch = weekReportPath.match(/(\d{4})年/);
             if (yearMatch) {
                 year = parseInt(yearMatch[1]);
             } else {
@@ -26,11 +26,11 @@ function getAllWeeklyReports(vaultPath, year = null) {
         const allFiles = [];
 
         try {
-            const files = readdirSync(vaultPath);
+            const files = readdirSync(weekReportPath);
             files.forEach(file => {
                 // 只处理.md文件，并且文件名符合周报格式（如：第1周12月30日.md）
                 if (extname(file) === '.md' && file.match(/^第\d+周/)) {
-                    const filePath = join(vaultPath, file);
+                    const filePath = join(weekReportPath, file);
                     allFiles.push({
                         fileName: file,
                         fullPath: filePath,
@@ -39,7 +39,7 @@ function getAllWeeklyReports(vaultPath, year = null) {
                 }
             });
         } catch (error) {
-            console.warn(`无法读取目录 ${vaultPath}: ${error.message}`);
+            console.warn(`无法读取目录 ${weekReportPath}: ${error.message}`);
         }
 
         // 按周数排序（提取文件名中的周数进行排序）
@@ -189,14 +189,14 @@ function retrieveWorkContent(workContent, retrieveScope) {
 
 /**
  * 构建年度工作内容
- * @param {string} vaultPath - 周报所在的目录路径
+ * @param {string} weekReportPath - 周报所在的目录路径
  * @param {number} year - 年份（可选）
  * @param {boolean} debug - 调试模式
  * @returns {Object} 包含工作内容和统计信息的对象
  */
-function buildYearContent(vaultPath, year = null, debug = false) {
+function buildYearContent(weekReportPath, year = null, debug = false) {
     try {
-        const allFiles = getAllWeeklyReports(vaultPath, year);
+        const allFiles = getAllWeeklyReports(weekReportPath, year);
         let workContent = "";
         let errorMessages = [];
         let processedFiles = 0;
@@ -246,22 +246,23 @@ function buildYearContent(vaultPath, year = null, debug = false) {
 
 /**
  * 生成年度工作报告
- * @param {string} vaultPath - 周报所在的目录路径
+ * @param {string} weekReportPath - 周报所在的目录路径
+ * @param createFile - 是否创建文件，默认为true
  * @param {boolean} debug - 是否开启调试模式，默认为false
  * @returns {string} 生成的年度报告内容
  */
-function buildYearReport(vaultPath, debug = false) {
+function buildYearReport(weekReportPath, createFile = true, debug = false) {
     try {
         // 记录开始时间
         const startTime = new Date();
 
         // 检查是否提供了vaultPath
-        if (!vaultPath) {
+        if (!weekReportPath) {
             throw new Error('未提供周报目录路径');
         }
 
         // 从路径中提取年份
-        const yearMatch = vaultPath.match(/(\d{4})年/);
+        const yearMatch = weekReportPath.match(/(\d{4})年/);
         if (!yearMatch) {
             throw new Error('路径中未包含年份信息（格式应为: .../XXXX年/）');
         }
@@ -270,12 +271,12 @@ function buildYearReport(vaultPath, debug = false) {
         // 构建调试信息
         let result = debug ? `<!-- 年度报告生成于 ${startTime.toLocaleString()} -->\n` : '';
         if (debug) {
-            result += `<!-- 使用目录路径: ${vaultPath} -->\n`;
+            result += `<!-- 使用目录路径: ${weekReportPath} -->\n`;
             result += `<!-- 目标年份: ${year} -->\n\n`;
         }
 
         // 构建年度工作内容
-        const yearContentResult = buildYearContent(vaultPath, year, debug);
+        const yearContentResult = buildYearContent(weekReportPath, year, debug);
 
         // 添加统计信息（调试模式下）
         if (debug) {
@@ -299,17 +300,19 @@ function buildYearReport(vaultPath, debug = false) {
 
         // 生成输出文件路径
         const outputFileName = `${year}年度总结.md`;
-        const outputPath = join(vaultPath, outputFileName);
+        const outputPath = join(weekReportPath, outputFileName);
 
         // 写入文件
-        writeFileSync(outputPath, result, 'utf-8');
+        if (createFile) {
+            writeFileSync(outputPath, result, 'utf-8');
+        }
 
         // 添加完成信息（调试模式下）
         if (debug) {
             const endTime = new Date();
             result += `\n\n<!-- 年度报告生成完成于 ${endTime.toLocaleString()}，耗时 ${endTime - startTime}ms -->`;
             result += `\n<!-- 报告已保存至: ${outputPath} -->`;
-            
+
             console.log(`年度报告已生成: ${outputPath}`);
             console.log(`处理统计: ${yearContentResult.stats.processedFiles}/${yearContentResult.stats.totalFiles} 个文件`);
         }
@@ -318,7 +321,7 @@ function buildYearReport(vaultPath, debug = false) {
     } catch (error) {
         // 捕获并返回所有错误
         const errorMessage = `# 【错误】年度报告生成失败\n\n
-## 错误详情\n- 错误信息: ${error.message}\n- 当前使用的目录路径: ${vaultPath || '未提供'}\n\n
+## 错误详情\n- 错误信息: ${error.message}\n- 当前使用的目录路径: ${weekReportPath || '未提供'}\n\n
 ## 请检查\n1. 目录路径是否正确\n2. 周报文件格式是否符合要求\n3. 脚本是否有权限读取文件`;
         console.error(errorMessage);
         return errorMessage;
